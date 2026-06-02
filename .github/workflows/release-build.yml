@@ -1,19 +1,29 @@
 name: Build And Upload Release Asset
 
 on:
-  release:
-    types:
-      - published
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "GitHub Release tag to attach the skill bundle zip to"
+        required: true
+        type: string
+
+permissions:
+  contents: write
 
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    if: startsWith(github.event.inputs.tag_name || github.ref_name, 'v')
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag_name || github.ref_name }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -33,19 +43,44 @@ jobs:
       - name: Build release bundle
         run: npm run build
 
-      - name: Locate release zip
-        id: locate_zip
+      - name: Verify release tag version
+        id: release_version
+        shell: bash
+        env:
+          TAG_NAME: ${{ github.event.inputs.tag_name || github.ref_name }}
+        run: |
+          set -euo pipefail
+          VERSION="${TAG_NAME#v}"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          case "${VERSION}" in
+            "${PACKAGE_VERSION}"|"${PACKAGE_VERSION}".*) ;;
+            *)
+              echo "Release tag version (${VERSION}) must match package.json version (${PACKAGE_VERSION}) or add a dot suffix such as ${PACKAGE_VERSION}.2." >&2
+              exit 1
+              ;;
+          esac
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "package_version=${PACKAGE_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare release zip
+        id: prepare_zip
         shell: bash
         run: |
           set -euo pipefail
-          zip_path="$(find bundle -maxdepth 1 -type f -name 'mikuscore-skills-*.zip' | head -n 1)"
-          if [[ -z "${zip_path}" ]]; then
-            echo "release zip not found under bundle/" >&2
+          source_zip="bundle/igapyon-mikuscore-skills-${{ steps.release_version.outputs.package_version }}.zip"
+          target_zip="release-assets/igapyon-mikuscore-skills-${{ steps.release_version.outputs.version }}.zip"
+          if [[ ! -s "${source_zip}" ]]; then
+            echo "release zip not found or empty: ${source_zip}" >&2
             exit 1
           fi
-          echo "zip_path=${zip_path}" >> "$GITHUB_OUTPUT"
+          mkdir -p release-assets
+          cp "${source_zip}" "${target_zip}"
+          echo "zip_path=${target_zip}" >> "$GITHUB_OUTPUT"
 
       - name: Upload zip to GitHub Release
-        run: gh release upload "${{ github.event.release.tag_name }}" "${{ steps.locate_zip.outputs.zip_path }}" --clobber
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
+          files: ${{ steps.prepare_zip.outputs.zip_path }}
+          draft: false
+          prerelease: false
