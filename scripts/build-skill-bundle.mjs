@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { shouldCopySkillRuntimePath } from "./lib/skill-runtime-copy-policy.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,14 +31,20 @@ function main() {
   fs.rmSync(bundleRoot, { recursive: true, force: true });
   fs.mkdirSync(bundleSkillsRoot, { recursive: true });
 
-  fs.cpSync(sourceSkillRoot, bundleSkillRoot, { recursive: true });
+  fs.cpSync(sourceSkillRoot, bundleSkillRoot, {
+    recursive: true,
+    filter(sourcePath) {
+      return shouldCopySkillRuntimePath(sourceSkillRoot, sourcePath);
+    }
+  });
   fs.mkdirSync(bundleSkillVendorRoot, { recursive: true });
   fs.cpSync(upstreamRoot, bundledUpstreamRoot, {
     recursive: true,
     filter(sourcePath) {
       const relativePath = path.relative(upstreamRoot, sourcePath);
       if (!relativePath) return true;
-      return !relativePath.split(path.sep).includes("node_modules");
+      return !relativePath.split(path.sep).includes("node_modules")
+        && shouldCopySkillRuntimePath(upstreamRoot, sourcePath);
     }
   });
   copyRuntimeDependencies();
@@ -47,7 +54,7 @@ function main() {
     "[build:bundle] copy this directory's contents under your skill home root",
     "[build:bundle] included:",
     "  - skills/mikuscore",
-    "  - skills/mikuscore/vendor/mikuscore",
+    "  - skills/mikuscore/vendor/mikuscore (transition runtime; development-only files excluded)",
     "  - skills/mikuscore/vendor/mikuscore/node_modules (runtime only)"
   ].join("\n"));
   process.stdout.write("\n");
@@ -69,7 +76,10 @@ function copyRuntimeDependencies() {
     const sourceDir = path.resolve(upstreamNodeModulesRoot, packageName);
     ensureSourceExists(sourceDir, `vendor/mikuscore/node_modules/${packageName}`);
     fs.cpSync(sourceDir, path.resolve(bundledUpstreamNodeModulesRoot, packageName), {
-      recursive: true
+      recursive: true,
+      filter(sourcePath) {
+        return shouldCopySkillRuntimePath(sourceDir, sourcePath);
+      }
     });
   }
 }
