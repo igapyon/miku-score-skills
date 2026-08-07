@@ -79,6 +79,12 @@ Typical skill-home locations:
 - GitHub Copilot: `~/.copilot/skills/mikuscore`
 - Claude: `~/.claude/skills/mikuscore`
 
+### Runtime And Transition State
+
+The current bundle requires Node.js 20 or later to run the bundled CLI.
+
+`vendor/mikuscore` is the current documented transition runtime, not the long-term package shape. The bundle now excludes development-only files and verifies isolated CLI behavior, but it still receives the Node runtime from the vendored upstream tree. The target shape is `skills/mikuscore/runtime/mikuscore.mjs`, plus `mikuscore.jar` when upstream provides a suitable Java CLI artifact. Until then, do not add new runtime lookup paths or skill-local conversion logic.
+
 ### Repo-Local Verification
 
 For local validation inside this repository:
@@ -94,7 +100,7 @@ npm run install:local
 - isolated bundle execution
 - vendored CLI conversion smoke behavior
 
-`npm run install:local` syncs the skill into repo-local `.codex/skills/mikuscore` and includes the vendored runtime and runtime dependencies inside the skill directory.
+`npm run install:local` syncs the skill into repo-local `.codex/skills/mikuscore` and includes the current vendored transition runtime and its runtime dependencies inside the skill directory.
 
 After that, start a new Codex session and invoke `mikuscore` explicitly.
 

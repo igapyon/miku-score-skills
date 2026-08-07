@@ -81,6 +81,8 @@ For this repository:
 - do not search broadly through the workspace before checking the vendored runtime
 - do not conclude that runtime dependencies are missing until the bundled skill-local runtime path has also been checked
 
+The vendored tree is a documented transition runtime. Do not add further runtime lookup paths or skill-local conversion logic around it. When upstream provides `runtime/mikuscore.mjs` or `runtime/mikuscore.jar`, use those declared artifacts according to the updated runtime reference.
+
 ## Conversion Discipline
 
 - identify `source` and `target` first

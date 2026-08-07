@@ -7,6 +7,13 @@
 - [x] Clarify that repo-root `mikuscore/` is the default working location only when the workflow needs repository files and the user did not specify another location.
 - [x] Add `docs/images/mikuscore-ogp.png` to `README.md`.
 
+## Miku-soft Standard Maintenance
+
+- [x] Treat the vendored runtime as an explicit transition state in README, `SKILL.md`, references, and development notes.
+- [x] Exclude development-only files from the bundle and verify its contents, isolated CLI routes, structured usage diagnostics, and reproducible ZIP hash in `npm test`.
+- [ ] Receive a self-contained upstream `mikuscore.mjs` runtime artifact and move normal skill packaging to `skills/mikuscore/runtime/`.
+- [ ] When upstream provides a suitable Java CLI artifact, receive it as peer `mikuscore.jar`, add Java-preferred / Node-fallback runtime selection, and remove the vendored source tree from the bundle.
+
 ## Upstream Follow-up
 
 - [x] Reflect the current upstream sync state in the repo notes.

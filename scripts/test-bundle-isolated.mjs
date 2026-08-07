@@ -3,13 +3,31 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..");
 const buildScriptPath = path.resolve(repoRoot, "scripts/build-skill-bundle.mjs");
+const buildZipScriptPath = path.resolve(repoRoot, "scripts/build-skill-bundle-zip.mjs");
+const packageJson = JSON.parse(fs.readFileSync(path.resolve(repoRoot, "package.json"), "utf8"));
+const zipPath = path.resolve(
+  repoRoot,
+  `bundle/igapyon-mikuscore-skills-${packageJson.version}.zip`
+);
+const forbiddenPathSegments = new Set([
+  ".github",
+  ".git",
+  ".mikuscore-build",
+  ".DS_Store",
+  "__tests__",
+  "screenshots",
+  "test",
+  "tests",
+  "workplace"
+]);
 
 const ABC_SAMPLE = [
   "X:1",
@@ -27,6 +45,8 @@ function main() {
     cwd: repoRoot,
     encoding: "utf8"
   });
+  verifyBundleContents();
+  verifyZipDeterminism();
 
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mikuscore-bundle-test-"));
   try {
@@ -39,15 +59,49 @@ function main() {
       isolatedSkillsRoot,
       "mikuscore/vendor/mikuscore/scripts/mikuscore-cli.mjs"
     );
-    const output = execFileSync(
+    const output = runCli(
+      isolatedCliPath,
+      [
+        "convert",
+        "--from",
+        "abc",
+        "--to",
+        "musicxml",
+        "--diagnostics",
+        "json"
+      ],
+      ABC_SAMPLE
+    );
+
+    if (!output.stdout.includes("<score-partwise")) {
+      throw new Error("isolated bundle conversion did not produce MusicXML output");
+    }
+    const conversionDiagnostics = JSON.parse(output.stderr);
+    if (conversionDiagnostics.ok !== true || conversionDiagnostics.status !== "success") {
+      throw new Error("isolated bundle conversion did not return success diagnostics");
+    }
+
+    const outputDirectory = path.resolve(tempRoot, "mikuscore/output");
+    fs.mkdirSync(outputDirectory, { recursive: true });
+    const svgPath = path.resolve(outputDirectory, "bundle-smoke.svg");
+    runCli(
+      isolatedCliPath,
+      ["render", "svg", "--from", "abc", "--out", svgPath],
+      ABC_SAMPLE
+    );
+    if (!fs.readFileSync(svgPath, "utf8").includes("<svg")) {
+      throw new Error("isolated bundle render did not write SVG output");
+    }
+
+    const usageFailure = spawnSync(
       "node",
       [
         isolatedCliPath,
         "convert",
         "--from",
         "abc",
-        "--to",
-        "musicxml"
+        "--diagnostics",
+        "json"
       ],
       {
         cwd: tempRoot,
@@ -55,13 +109,85 @@ function main() {
         encoding: "utf8"
       }
     );
-
-    if (!output.includes("<score-partwise")) {
-      throw new Error("isolated bundle conversion did not produce MusicXML output");
+    if (usageFailure.status !== 2) {
+      throw new Error(`isolated bundle usage failure returned ${usageFailure.status}, expected 2`);
+    }
+    const usageDiagnostics = JSON.parse(usageFailure.stderr);
+    if (usageDiagnostics.error_type !== "usage_error" || usageDiagnostics.error_code !== "missing_from_to") {
+      throw new Error("isolated bundle usage failure did not preserve structured diagnostics");
     }
 
-    process.stdout.write("[test] isolated bundle CLI conversion passed\n");
+    process.stdout.write("[test] isolated bundle CLI convert, render, and diagnostics passed\n");
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
+}
+
+function verifyBundleContents() {
+  const bundleSkillRoot = path.resolve(repoRoot, "bundle/mikuscore-skills/skills/mikuscore");
+  const requiredPaths = [
+    "SKILL.md",
+    "references/INDEX.md",
+    "vendor/mikuscore/scripts/mikuscore-cli.mjs",
+    "vendor/mikuscore/LICENSE",
+    "vendor/mikuscore/THIRD-PARTY-NOTICES.md"
+  ];
+  for (const relativePath of requiredPaths) {
+    if (!fs.existsSync(path.resolve(bundleSkillRoot, relativePath))) {
+      throw new Error(`bundle is missing required path: ${relativePath}`);
+    }
+  }
+  assertNoForbiddenPaths(bundleSkillRoot, "bundle");
+}
+
+function verifyZipDeterminism() {
+  execFileSync("node", [buildZipScriptPath], { cwd: repoRoot, encoding: "utf8" });
+  const firstHash = hashFile(zipPath);
+  execFileSync("node", [buildZipScriptPath], { cwd: repoRoot, encoding: "utf8" });
+  const secondHash = hashFile(zipPath);
+  if (firstHash !== secondHash) {
+    throw new Error(`bundle zip is not reproducible: ${firstHash} != ${secondHash}`);
+  }
+
+  const archiveEntries = execFileSync("unzip", ["-Z1", zipPath], {
+    cwd: repoRoot,
+    encoding: "utf8"
+  }).trim().split("\n").filter(Boolean);
+  for (const archiveEntry of archiveEntries) {
+    assertNoForbiddenPath(archiveEntry, "zip");
+  }
+  process.stdout.write("[test] bundle contents and zip determinism passed\n");
+}
+
+function runCli(cliPath, args, input) {
+  const result = spawnSync("node", [cliPath, ...args], {
+    input,
+    encoding: "utf8"
+  });
+  if (result.status !== 0) {
+    throw new Error(`isolated CLI command failed: ${args.join(" ")}\n${result.stderr}`);
+  }
+  return result;
+}
+
+function assertNoForbiddenPaths(rootPath, label) {
+  for (const entry of fs.readdirSync(rootPath, { withFileTypes: true })) {
+    const entryPath = path.resolve(rootPath, entry.name);
+    assertNoForbiddenPath(entry.name, label);
+    if (entry.isDirectory()) {
+      assertNoForbiddenPaths(entryPath, label);
+    }
+  }
+}
+
+function assertNoForbiddenPath(relativePath, label) {
+  const pathSegments = relativePath.split(/[\\/]/).filter(Boolean);
+  const forbiddenPathSegment = pathSegments.find((segment) => forbiddenPathSegments.has(segment));
+  if (forbiddenPathSegment) {
+    throw new Error(`${label} contains excluded development path: ${relativePath}`);
+  }
+}
+
+function hashFile(targetPath) {
+  return createHash("sha256").update(fs.readFileSync(targetPath)).digest("hex");
 }

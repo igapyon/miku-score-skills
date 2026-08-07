@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { shouldCopySkillRuntimePath } from "./lib/skill-runtime-copy-policy.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,14 +28,20 @@ function main() {
 
   fs.mkdirSync(localCodexSkillsRoot, { recursive: true });
   fs.rmSync(targetSkillRoot, { recursive: true, force: true });
-  fs.cpSync(sourceSkillRoot, targetSkillRoot, { recursive: true });
+  fs.cpSync(sourceSkillRoot, targetSkillRoot, {
+    recursive: true,
+    filter(sourcePath) {
+      return shouldCopySkillRuntimePath(sourceSkillRoot, sourcePath);
+    }
+  });
   fs.mkdirSync(path.resolve(targetSkillRoot, "vendor"), { recursive: true });
   fs.cpSync(upstreamRoot, targetUpstreamRoot, {
     recursive: true,
     filter(sourcePath) {
       const relativePath = path.relative(upstreamRoot, sourcePath);
       if (!relativePath) return true;
-      return !relativePath.split(path.sep).includes("node_modules");
+      return !relativePath.split(path.sep).includes("node_modules")
+        && shouldCopySkillRuntimePath(upstreamRoot, sourcePath);
     }
   });
   copyRuntimeDependencies();
@@ -43,7 +50,7 @@ function main() {
     "[install:local] synced skill into repo-local Codex home",
     `[install:local] source: ${path.relative(repoRoot, sourceSkillRoot)}`,
     `[install:local] target: ${path.relative(repoRoot, targetSkillRoot)}`,
-    "[install:local] included vendor/mikuscore under the skill directory",
+    "[install:local] included filtered vendor/mikuscore transition runtime under the skill directory",
     "[install:local] included vendor/mikuscore/node_modules (runtime only)"
   ].join("\n"));
   process.stdout.write("\n");
@@ -65,7 +72,10 @@ function copyRuntimeDependencies() {
     const sourceDir = path.resolve(upstreamNodeModulesRoot, packageName);
     ensureSourceExists(sourceDir, `vendor/mikuscore/node_modules/${packageName}`);
     fs.cpSync(sourceDir, path.resolve(targetUpstreamNodeModulesRoot, packageName), {
-      recursive: true
+      recursive: true,
+      filter(sourcePath) {
+        return shouldCopySkillRuntimePath(sourceDir, sourcePath);
+      }
     });
   }
 }
