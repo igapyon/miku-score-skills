@@ -1,0 +1,19 @@
+{
+ "title": "igapyon-miku-score Skill Index",
+ "generator": "miku-indexgen",
+ "generation": {"schemaVersion":1,"inputPath":".","markdownOutput":false,"recursive":true,"includeExtensions":["md","mjs","json","yaml"],"inputEncoding":"utf8","outputEncoding":"utf8","title":"igapyon-miku-score Skill Index","includeGeneratorMetadata":true},
+ "basePath": ".",
+ "files": [
+  {"name":"SKILL.md","path":"SKILL.md","ext":"md","dir":"","size":8170,"description":"Use only when the user explicitly says `igapyon-miku-score`, `miku-score`, or `miku-score-skills`, or uses the documented compatibility triggers `mikuscore` or `mikuscore-skills` for miku-score-specific score conversion, diagnostics, AI handoff, or CLI ...","summary":"Miku Score"},
+  {"name":"openai.yaml","path":"agents/openai.yaml","ext":"yaml","dir":"agents","size":1054},
+  {"name":"INDEX.md","path":"references/INDEX.md","ext":"md","dir":"references","size":1444,"summary":"References Index"},
+  {"name":"file-workflow-examples.md","path":"references/examples/file-workflow-examples.md","ext":"md","dir":"references/examples","size":965,"summary":"File Workflow Examples"},
+  {"name":"operations-map.md","path":"references/runtime/operations-map.md","ext":"md","dir":"references/runtime","size":1375,"summary":"Operations Map"},
+  {"name":"upstream-map.md","path":"references/runtime/upstream-map.md","ext":"md","dir":"references/runtime","size":3009,"summary":"Upstream Map"},
+  {"name":"active-workflow-rules.md","path":"references/workflow/active-workflow-rules.md","ext":"md","dir":"references/workflow","size":1843,"summary":"Active Workflow Rules"},
+  {"name":"composition-and-output.md","path":"references/workflow/composition-and-output.md","ext":"md","dir":"references/workflow","size":2182,"summary":"Composition And Output"},
+  {"name":"conversion-routing.md","path":"references/workflow/conversion-routing.md","ext":"md","dir":"references/workflow","size":2151,"summary":"Conversion Routing"},
+  {"name":"diagnostics-handling.md","path":"references/workflow/diagnostics-handling.md","ext":"md","dir":"references/workflow","size":1235,"summary":"Diagnostics Handling"},
+  {"name":"output-location-rules.md","path":"references/workflow/output-location-rules.md","ext":"md","dir":"references/workflow","size":1413,"summary":"Output Location Rules"}
+ ]
+}

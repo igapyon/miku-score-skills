@@ -3,4 +3,6 @@
 workplace/
 bundle/
 node_modules/
+/miku-score/
+# Preserve pre-migration local output without treating it as an installable skill.
 /mikuscore/

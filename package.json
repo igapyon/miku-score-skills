@@ -1,8 +1,8 @@
 {
-  "name": "mikuscore-skills",
-  "version": "0.1.1",
+  "name": "miku-score-skills",
+  "version": "0.6.1",
   "private": true,
-  "description": "Agent Skills for mikuscore",
+  "description": "Agent Skills for miku-score",
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
@@ -10,7 +10,7 @@
     "build:bundle": "node scripts/build-skill-bundle.mjs",
     "build:bundle:zip": "npm run build:bundle && node scripts/build-skill-bundle-zip.mjs",
     "build:full": "npm run build",
-    "build:upstream": "npm --prefix vendor/mikuscore run build",
+    "build:upstream": "npm --prefix vendor/miku-score run build",
     "install:local": "node scripts/install-local-skill.mjs",
     "test": "node scripts/check-skill-structure.mjs && node scripts/test-bundle-isolated.mjs"
   }

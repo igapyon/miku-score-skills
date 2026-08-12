@@ -1,0 +1,220 @@
+/*
+ * Copyright 2026 Toshiki Iga
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+export type VerovioToolkitApi = {
+  setOptions: (options: Record<string, unknown>) => void;
+  loadData: (xml: string) => boolean;
+  getPageCount: () => number;
+  renderToSVG: (page: number, options: Record<string, unknown>) => string;
+};
+
+type VerovioRuntime = {
+  module?: {
+    calledRun?: boolean;
+    cwrap?: unknown;
+    onRuntimeInitialized?: (() => void) | null;
+  };
+  toolkit?: new () => VerovioToolkitApi;
+};
+
+type OpenSlurStacks = Map<string, Element[]>;
+
+const DEFAULT_SLUR_NUMBER = "1";
+const VEROVIO_INIT_TIMEOUT_MS = 8000;
+
+export type VerovioRenderResult = {
+  svg: string;
+  pageCount: number;
+};
+
+let verovioToolkit: VerovioToolkitApi | null = null;
+let verovioInitPromise: Promise<VerovioToolkitApi | null> | null = null;
+
+const cloneXmlDocument = (doc: Document): Document => {
+  const cloned = document.implementation.createDocument("", "", null);
+  const root = cloned.importNode(doc.documentElement, true);
+  cloned.appendChild(root);
+  return cloned;
+};
+
+const childElementsBySelector = (parent: ParentNode, selector: string): Element[] => {
+  return Array.from(parent.querySelectorAll(selector));
+};
+
+const pruneEmptyNotations = (notations: Element | null): void => {
+  if (!notations || notations.tagName !== "notations") return;
+  if (notations.children.length > 0) return;
+  notations.remove();
+};
+
+const removeSlurAndPruneNotations = (slur: Element): void => {
+  const notations = slur.parentElement;
+  slur.remove();
+  pruneEmptyNotations(notations);
+};
+
+const getSlurNumber = (slur: Element): string => {
+  return (slur.getAttribute("number") ?? DEFAULT_SLUR_NUMBER).trim() || DEFAULT_SLUR_NUMBER;
+};
+
+const getSlurType = (slur: Element): string => {
+  return (slur.getAttribute("type") ?? "").trim().toLowerCase();
+};
+
+const openSlurStack = (openSlurs: OpenSlurStacks, number: string): Element[] => {
+  const stack = openSlurs.get(number) ?? [];
+  openSlurs.set(number, stack);
+  return stack;
+};
+
+const processSlurForRender = (slur: Element, openSlurs: OpenSlurStacks): void => {
+  const number = getSlurNumber(slur);
+  const type = getSlurType(slur);
+  const stack = openSlurStack(openSlurs, number);
+
+  if (type === "start") {
+    stack.push(slur);
+    return;
+  }
+
+  if (type === "stop") {
+    if (stack.length > 0) {
+      stack.pop();
+    } else {
+      removeSlurAndPruneNotations(slur);
+    }
+    return;
+  }
+
+  if (type === "continue") {
+    if (stack.length === 0) {
+      removeSlurAndPruneNotations(slur);
+      return;
+    }
+    stack.pop();
+    stack.push(slur);
+  }
+};
+
+const sanitizeSlursForRender = (doc: Document): void => {
+  const parts = childElementsBySelector(doc, "score-partwise > part");
+  for (const part of parts) {
+    const openSlurs: OpenSlurStacks = new Map();
+    const measures = childElementsBySelector(part, ":scope > measure");
+    for (const measure of measures) {
+      const notes = childElementsBySelector(measure, ":scope > note");
+      for (const note of notes) {
+        const slurs = childElementsBySelector(note, ":scope > notations > slur");
+        for (const slur of slurs) {
+          processSlurForRender(slur, openSlurs);
+        }
+      }
+    }
+    for (const danglingStarts of openSlurs.values()) {
+      for (const startSlur of danglingStarts) {
+        removeSlurAndPruneNotations(startSlur);
+      }
+    }
+  }
+};
+
+const getVerovioRuntime = (): VerovioRuntime | null => {
+  return (window as unknown as { verovio?: VerovioRuntime }).verovio ?? null;
+};
+
+const isVerovioRuntimeReady = (moduleObj: NonNullable<VerovioRuntime["module"]>): boolean => {
+  return Boolean(moduleObj.calledRun && typeof moduleObj.cwrap === "function");
+};
+
+const waitForVerovioRuntime = async (moduleObj: NonNullable<VerovioRuntime["module"]>): Promise<void> => {
+  if (isVerovioRuntimeReady(moduleObj)) return;
+
+  await new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const timeoutId = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new Error("Timed out while waiting for verovio initialization."));
+    }, VEROVIO_INIT_TIMEOUT_MS);
+
+    const complete = () => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
+      resolve();
+    };
+
+    const previous = moduleObj.onRuntimeInitialized;
+    moduleObj.onRuntimeInitialized = () => {
+      if (typeof previous === "function") {
+        previous();
+      }
+      complete();
+    };
+
+    if (isVerovioRuntimeReady(moduleObj)) {
+      complete();
+    }
+  });
+};
+
+const ensureVerovioToolkit = async (): Promise<VerovioToolkitApi | null> => {
+  if (verovioToolkit) {
+    return verovioToolkit;
+  }
+  if (verovioInitPromise) {
+    return verovioInitPromise;
+  }
+
+  verovioInitPromise = (async () => {
+    const runtime = getVerovioRuntime();
+    if (!runtime || typeof runtime.toolkit !== "function") {
+      throw new Error("verovio.js is not loaded.");
+    }
+    const moduleObj = runtime.module;
+    if (!moduleObj) {
+      throw new Error("verovio module was not found.");
+    }
+
+    await waitForVerovioRuntime(moduleObj);
+
+    verovioToolkit = new runtime.toolkit();
+    return verovioToolkit;
+  })()
+    .catch((error) => {
+      verovioInitPromise = null;
+      throw error;
+    });
+
+  return verovioInitPromise;
+};
+
+export const renderMusicXmlDomToSvg = async (
+  doc: Document,
+  options: Record<string, unknown>
+): Promise<VerovioRenderResult> => {
+  const toolkit = await ensureVerovioToolkit();
+  if (!toolkit) {
+    throw new Error("Failed to initialize verovio toolkit.");
+  }
+  // Keep source DOM intact and only sanitize slur mismatch on render copy.
+  const renderDoc = cloneXmlDocument(doc);
+  sanitizeSlursForRender(renderDoc);
+  const xml = new XMLSerializer().serializeToString(renderDoc);
+  toolkit.setOptions(options);
+  const loaded = toolkit.loadData(xml);
+  if (!loaded) {
+    throw new Error("verovio loadData failed.");
+  }
+  const pageCount = toolkit.getPageCount();
+  if (!Number.isFinite(pageCount) || pageCount < 1) {
+    throw new Error("verovio returned an invalid pageCount.");
+  }
+  const svg = toolkit.renderToSVG(1, {});
+  if (!svg) {
+    throw new Error("Failed to generate SVG with verovio.");
+  }
+  return { svg, pageCount };
+};

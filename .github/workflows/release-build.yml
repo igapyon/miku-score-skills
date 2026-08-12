@@ -32,13 +32,13 @@ jobs:
           cache: npm
           cache-dependency-path: |
             package-lock.json
-            vendor/mikuscore/package-lock.json
+            vendor/miku-score/package-lock.json
 
       - name: Install root dependencies
         run: npm ci
 
       - name: Install upstream dependencies
-        run: npm --prefix vendor/mikuscore ci
+        run: npm --prefix vendor/miku-score ci
 
       - name: Build release bundle
         run: npm run build
@@ -67,8 +67,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          source_zip="bundle/igapyon-mikuscore-skills-${{ steps.release_version.outputs.package_version }}.zip"
-          target_zip="release-assets/igapyon-mikuscore-skills-${{ steps.release_version.outputs.version }}.zip"
+          source_zip="bundle/igapyon-miku-score-skills-${{ steps.release_version.outputs.package_version }}.zip"
+          target_zip="release-assets/igapyon-miku-score-skills-${{ steps.release_version.outputs.version }}.zip"
           if [[ ! -s "${source_zip}" ]]; then
             echo "release zip not found or empty: ${source_zip}" >&2
             exit 1

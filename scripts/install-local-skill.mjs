@@ -9,22 +9,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..");
 
-const sourceSkillRoot = path.resolve(repoRoot, "skills/mikuscore");
-const upstreamRoot = path.resolve(repoRoot, "vendor/mikuscore");
+const sourceSkillRoot = path.resolve(repoRoot, "skills/igapyon-miku-score");
+const upstreamRoot = path.resolve(repoRoot, "vendor/miku-score");
 const upstreamPackageLockPath = path.resolve(upstreamRoot, "package-lock.json");
 const upstreamNodeModulesRoot = path.resolve(upstreamRoot, "node_modules");
 const localCodexSkillsRoot = path.resolve(repoRoot, ".codex/skills");
-const targetSkillRoot = path.resolve(localCodexSkillsRoot, "mikuscore");
-const targetUpstreamRoot = path.resolve(targetSkillRoot, "vendor", "mikuscore");
+const targetSkillRoot = path.resolve(localCodexSkillsRoot, "igapyon-miku-score");
+const targetUpstreamRoot = path.resolve(targetSkillRoot, "vendor", "miku-score");
 const targetUpstreamNodeModulesRoot = path.resolve(targetUpstreamRoot, "node_modules");
 
 main();
 
 function main() {
-  ensureSourceExists(sourceSkillRoot, "skills/mikuscore");
-  ensureSourceExists(upstreamRoot, "vendor/mikuscore");
-  ensureSourceExists(upstreamPackageLockPath, "vendor/mikuscore/package-lock.json");
-  ensureSourceExists(upstreamNodeModulesRoot, "vendor/mikuscore/node_modules");
+  ensureSourceExists(sourceSkillRoot, "skills/igapyon-miku-score");
+  ensureSourceExists(upstreamRoot, "vendor/miku-score");
+  ensureSourceExists(upstreamPackageLockPath, "vendor/miku-score/package-lock.json");
+  ensureSourceExists(upstreamNodeModulesRoot, "vendor/miku-score/node_modules");
 
   fs.mkdirSync(localCodexSkillsRoot, { recursive: true });
   fs.rmSync(targetSkillRoot, { recursive: true, force: true });
@@ -50,8 +50,8 @@ function main() {
     "[install:local] synced skill into repo-local Codex home",
     `[install:local] source: ${path.relative(repoRoot, sourceSkillRoot)}`,
     `[install:local] target: ${path.relative(repoRoot, targetSkillRoot)}`,
-    "[install:local] included filtered vendor/mikuscore transition runtime under the skill directory",
-    "[install:local] included vendor/mikuscore/node_modules (runtime only)"
+    "[install:local] included filtered vendor/miku-score transition runtime under the skill directory",
+    "[install:local] included vendor/miku-score/node_modules (runtime only)"
   ].join("\n"));
   process.stdout.write("\n");
 }
@@ -70,7 +70,7 @@ function copyRuntimeDependencies() {
   fs.mkdirSync(targetUpstreamNodeModulesRoot, { recursive: true });
   for (const packageName of requiredPackages) {
     const sourceDir = path.resolve(upstreamNodeModulesRoot, packageName);
-    ensureSourceExists(sourceDir, `vendor/mikuscore/node_modules/${packageName}`);
+    ensureSourceExists(sourceDir, `vendor/miku-score/node_modules/${packageName}`);
     fs.cpSync(sourceDir, path.resolve(targetUpstreamNodeModulesRoot, packageName), {
       recursive: true,
       filter(sourcePath) {
@@ -93,7 +93,7 @@ function collectRequiredPackages(packages, roots) {
     const packageKey = `node_modules/${packageName}`;
     const packageInfo = packages[packageKey];
     if (!packageInfo) {
-      throw new Error(`vendor/mikuscore/package-lock.json missing entry for ${packageKey}`);
+      throw new Error(`vendor/miku-score/package-lock.json missing entry for ${packageKey}`);
     }
 
     required.add(packageName);

@@ -3,7 +3,7 @@ import path from "node:path";
 const developmentOnlyPathSegments = new Set([
   ".github",
   ".git",
-  ".mikuscore-build",
+  ".miku-score-build",
   "__tests__",
   "screenshots",
   "test",
@@ -12,6 +12,7 @@ const developmentOnlyPathSegments = new Set([
 ]);
 const developmentOnlyFileNames = new Set([
   ".DS_Store",
+  ".tsbuildinfo",
   ".gitignore"
 ]);
 
