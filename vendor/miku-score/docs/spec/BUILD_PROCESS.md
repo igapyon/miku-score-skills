@@ -1,0 +1,90 @@
+# Build Process (Single-file Runtime / Split TS Dev)
+
+## Purpose
+
+This project adopts:
+
+- development with split TypeScript source files
+- distribution as a single self-contained HTML file
+
+The build process is designed to preserve offline and zero-runtime-dependency behavior.
+
+Scope note:
+
+- This file defines build/runtime artifact constraints.
+- Day-to-day quality gate operation is defined in `docs/spec/LOCAL_WORKFLOW.md`.
+
+## Target Artifact
+
+- Development templates: `miku-score-src.html`, `index-src.html` (editable source templates)
+- Distribution artifacts: `miku-score.html`, `index.html`, `bundle/miku-score.mjs` (generated files, do not edit directly)
+- Release staging artifacts: `release-assets/` (generated local output, do not commit)
+
+## Suggested Project Layout (MVP)
+
+- `miku-score-src.html`
+- `index-src.html`
+- `miku-score.html` (generated)
+- `index.html` (generated)
+- `src/css/app.css`
+- `src/ts/main.ts`
+- `src/ts/**/*.ts` (core/ui split modules)
+- `src/js/main.js` (generated from TS)
+- `src/js/**/*.js` (generated)
+- `src/vendor/**/*.js` (optional vendored libraries, local only)
+
+## Build Command
+
+```bash
+npm run build
+```
+
+`build` SHOULD perform the following steps:
+
+1. Compile `src/ts/**/*.ts` to `src/js/**/*.js`
+2. Validate `miku-score-src.html` tag order (CSS and JS include order)
+3. Inline local CSS and JS into `miku-score.html`
+4. Render static landing templates such as `index-src.html`
+5. Output generated HTML artifacts
+6. Output the single-file Node.js CLI runtime artifact
+
+Release asset staging is handled by a separate command after build when `TAG_NAME` is supplied.
+
+## Related Commands
+
+For verification and daily commands (`typecheck`, `test:*`, `check:all`, `clean`), see:
+
+- `docs/spec/LOCAL_WORKFLOW.md`
+
+## Toolchain Baseline
+
+- TypeScript: `5.9.x` baseline (current verified: `5.9.3`)
+- JavaScript output target: `ES2018`
+- Recommendation: pin exact TypeScript patch version in lockfile for reproducible builds
+
+## Browser Support Baseline
+
+- Primary targets: latest Chrome, latest Edge, latest Safari
+- Compatibility strategy: keep emitted JS at `ES2018` to improve tolerance for older Android Chrome/WebView environments
+- Note: very old Android devices may still require additional runtime compatibility checks
+
+## Runtime Constraints (MUST)
+
+- `miku-score.html` MUST run offline (no network required)
+- `miku-score.html` MUST NOT fetch external CDN/resources at runtime
+- all required scripts/styles MUST be embedded or locally bundled
+- behavior of generated `miku-score.html` MUST match development source behavior
+- `bundle/miku-score.mjs` MUST NOT depend on source-tree-relative TypeScript files at runtime
+- `bundle/miku-score.mjs` SHOULD bundle Node.js runtime package dependencies needed for normal CLI execution, while leaving Node built-ins external
+
+## Editing Rules
+
+- `miku-score.html`, `index.html`, and `bundle/miku-score.mjs` are generated; do not edit them directly
+- `release-assets/` is generated staging output; do not edit or commit it
+- edit `miku-score-src.html`, `index-src.html`, and files under `src/`
+- PRs SHOULD include regenerated `miku-score.html` when behavior changes
+
+## Notes
+
+- If TypeScript compiler is unavailable, build MAY fail fast (recommended), or use an explicit fallback policy if defined in package scripts.
+- This document defines process and constraints; concrete script implementation is tracked separately.

@@ -15,12 +15,13 @@ const buildZipScriptPath = path.resolve(repoRoot, "scripts/build-skill-bundle-zi
 const packageJson = JSON.parse(fs.readFileSync(path.resolve(repoRoot, "package.json"), "utf8"));
 const zipPath = path.resolve(
   repoRoot,
-  `bundle/igapyon-mikuscore-skills-${packageJson.version}.zip`
+  `bundle/igapyon-miku-score-skills-${packageJson.version}.zip`
 );
 const forbiddenPathSegments = new Set([
   ".github",
   ".git",
-  ".mikuscore-build",
+  ".miku-score-build",
+  ".tsbuildinfo",
   ".DS_Store",
   "__tests__",
   "screenshots",
@@ -48,17 +49,30 @@ function main() {
   verifyBundleContents();
   verifyZipDeterminism();
 
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mikuscore-bundle-test-"));
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "miku-score-bundle-test-"));
   try {
     const isolatedSkillsRoot = path.resolve(tempRoot, "skills");
-    fs.cpSync(path.resolve(repoRoot, "bundle/mikuscore-skills/skills"), isolatedSkillsRoot, {
+    fs.cpSync(path.resolve(repoRoot, "bundle/miku-score-skills/skills"), isolatedSkillsRoot, {
       recursive: true
     });
 
     const isolatedCliPath = path.resolve(
       isolatedSkillsRoot,
-      "mikuscore/vendor/mikuscore/scripts/mikuscore-cli.mjs"
+      "igapyon-miku-score/vendor/miku-score/scripts/miku-score-cli.mjs"
     );
+    const bundledRuntimeVersion = JSON.parse(fs.readFileSync(
+      path.resolve(
+        isolatedSkillsRoot,
+        "igapyon-miku-score/vendor/miku-score/package.json"
+      ),
+      "utf8"
+    )).version;
+    const versionOutput = runCli(isolatedCliPath, ["--version"], "");
+    if (versionOutput.stdout.trim() !== bundledRuntimeVersion) {
+      throw new Error(
+        `isolated bundle --version returned ${JSON.stringify(versionOutput.stdout.trim())}, expected ${bundledRuntimeVersion}`
+      );
+    }
     const output = runCli(
       isolatedCliPath,
       [
@@ -81,7 +95,7 @@ function main() {
       throw new Error("isolated bundle conversion did not return success diagnostics");
     }
 
-    const outputDirectory = path.resolve(tempRoot, "mikuscore/output");
+    const outputDirectory = path.resolve(tempRoot, "miku-score/output");
     fs.mkdirSync(outputDirectory, { recursive: true });
     const svgPath = path.resolve(outputDirectory, "bundle-smoke.svg");
     runCli(
@@ -124,13 +138,18 @@ function main() {
 }
 
 function verifyBundleContents() {
-  const bundleSkillRoot = path.resolve(repoRoot, "bundle/mikuscore-skills/skills/mikuscore");
+  const bundleSkillRoot = path.resolve(repoRoot, "bundle/miku-score-skills/skills/igapyon-miku-score");
+  const legacyBundleSkillRoot = path.resolve(repoRoot, "bundle/miku-score-skills/skills/mikuscore");
+  if (fs.existsSync(legacyBundleSkillRoot)) {
+    throw new Error("bundle must not contain a legacy skills/mikuscore directory");
+  }
   const requiredPaths = [
     "SKILL.md",
+    "index.json",
     "references/INDEX.md",
-    "vendor/mikuscore/scripts/mikuscore-cli.mjs",
-    "vendor/mikuscore/LICENSE",
-    "vendor/mikuscore/THIRD-PARTY-NOTICES.md"
+    "vendor/miku-score/scripts/miku-score-cli.mjs",
+    "vendor/miku-score/LICENSE",
+    "vendor/miku-score/THIRD-PARTY-NOTICES.md"
   ];
   for (const relativePath of requiredPaths) {
     if (!fs.existsSync(path.resolve(bundleSkillRoot, relativePath))) {

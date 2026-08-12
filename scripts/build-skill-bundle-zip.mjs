@@ -9,12 +9,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..");
 const bundleParentRoot = path.resolve(repoRoot, "bundle");
-const bundleDirName = "mikuscore-skills";
+const bundleDirName = "miku-score-skills";
 const bundleRoot = path.resolve(bundleParentRoot, bundleDirName);
 const packageJson = JSON.parse(
   fs.readFileSync(path.resolve(repoRoot, "package.json"), "utf8")
 );
-const zipFileName = `igapyon-mikuscore-skills-${packageJson.version}.zip`;
+const zipFileName = `igapyon-miku-score-skills-${packageJson.version}.zip`;
 const zipPath = path.resolve(bundleParentRoot, zipFileName);
 const defaultSourceDateEpoch = 946684800;
 
@@ -22,7 +22,7 @@ main();
 
 function main() {
   if (!fs.existsSync(bundleRoot)) {
-    throw new Error("missing bundle/mikuscore-skills. run build:bundle first.");
+    throw new Error("missing bundle/miku-score-skills. run build:bundle first.");
   }
 
   fs.rmSync(zipPath, { force: true });

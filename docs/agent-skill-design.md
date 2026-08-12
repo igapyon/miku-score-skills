@@ -1,22 +1,22 @@
 # Agent Skill Design
 
-`mikuscore-skills` の MVP 向け Agent Skill 設計メモです。
+`miku-score-skills` の MVP 向け Agent Skill 設計メモです。
 
 この設計は次の 2 つを主な参照元とする。
 
-- 対象プロダクト: upstream `igapyon/mikuscore`
+- 対象プロダクト: upstream `igapyon/miku-score`
 - Skill 設計の参照実装: upstream `igapyon/mikuproject-skills`
 
 補足:
 
-- `mikuscore` の実体リポジトリは `igapyon/mikuscore` を基準として考える
-- ローカルの `workplace/mikuscore-devel` は、その仕様検討用の作業コピーとして扱う
-- このリポジトリで Skill から安定参照する upstream 本体は `vendor/mikuscore` を想定する
+- `miku-score` の実体リポジトリは `igapyon/miku-score` を基準として考える
+- ローカルの `workplace/miku-score-devel` は、その仕様検討用の作業コピーとして扱う
+- このリポジトリで Skill から安定参照する upstream 本体は `vendor/miku-score` を想定する
 
 ## subtree 運用
 
-`mikuscore-skills` では、`mikuproject-skills` を参考に `mikuscore` を
-`vendor/mikuscore/` に `git subtree` で取り込む方針を採る。
+`miku-score-skills` では、`mikuproject-skills` を参考に `miku-score` を
+`vendor/miku-score/` に `git subtree` で取り込む方針を採る。
 
 理由:
 
@@ -27,68 +27,74 @@
 
 運用前提:
 
-- `vendor/mikuscore/` は upstream 保持場所として扱う
-- 仕様確認や一時検討は `workplace/` でもよいが、正式文書の参照先は `vendor/mikuscore/` を優先する
+- `vendor/miku-score/` は upstream 保持場所として扱う
+- 仕様確認や一時検討は `workplace/` でもよいが、正式文書の参照先は `vendor/miku-score/` を優先する
 - upstream 更新手順は `docs/development.md` にまとめる
 
 ## 方針
 
 MVP では、変換対象ごとに skill を細かく分割しない。
-まずは 1 つの `mikuscore` skill として成立させる。
+まずは 1 つの `miku-score` skill として成立させる。
 
 理由:
 
 - 利用者から見ると `MusicXML` / `ABC` / `MIDI` / `MuseScore` の変換は 1 つの往復フローとして理解されやすい
-- `mikuscore` の中核方針は format ごとの個別 UI ではなく `MusicXML-first` の変換パイプラインである
+- `miku-score` の中核方針は format ごとの個別 UI ではなく `MusicXML-first` の変換パイプラインである
 - 初期段階で skill を分けすぎると、対象 format 判定、会話状態、handoff 文脈が複雑になる
 
 ## MVP Skill の責務
 
 Skill は次の責務を担当する。
 
-- `mikuscore` 固有の変換ワークフローを案内する
+- `miku-score` 固有の変換ワークフローを案内する
 - 入力 format と出力 format を判定し、適切な変換経路を選ぶ
 - 必要に応じて `MusicXML` を内部の正規基軸として扱う
 - 生成 AI との会話境界では、現行方針として `ABC` を優先的に扱う
 - `ABC` の対応基準は current documented baseline として `ABC standard 2.2` を明示する
 - 変換結果と診断情報の扱いを整理する
-- `mikuscore` の仕様に沿って、破壊的な説明や不正確な案内を避ける
+- `miku-score` の仕様に沿って、破壊的な説明や不正確な案内を避ける
 
 Skill は譜面浄書アプリや汎用 DAW の代替を目指さない。
-MVP の責務は、`mikuscore` に即した structured workflow と format conversion の会話誘導を安定させることである。
+MVP の責務は、`miku-score` に即した structured workflow と format conversion の会話誘導を安定させることである。
 
 ## Skill 名称
 
-第一候補:
+正式 Agent Skill identity:
 
-- `mikuscore`
+- `igapyon-miku-score`
+
+正式 trigger:
+
+- `miku-score`
+- `miku-score-skills`
 
 候補理由:
 
 - upstream 名と一致していて理解しやすい
-- `mikuscore` 固有の変換・診断・MusicXML-first 方針を扱う skill であることが明確
+- `miku-score` 固有の変換・診断・MusicXML-first 方針を扱う skill であることが明確
 
 代替候補:
 
-- `mikuscore-convert`
-- `mikuscore-musicxml`
+- `miku-score-convert`
+- `miku-score-musicxml`
 
-MVP では `mikuscore` を採用する想定とする。
+MVP では installed skill identity として `igapyon-miku-score`、会話上の
+正式 trigger として `miku-score` を採用する想定とする。
 
 ## 想定する利用シーン
 
 ### 1. Format 変換の相談
 
-- 利用者が `mikuscore` を明示して変換を依頼する
+- 利用者が `miku-score` を明示して変換を依頼する
 - Skill が入力と出力の format を整理する
-- Skill が `mikuscore` に適した変換経路を案内する
+- Skill が `miku-score` に適した変換経路を案内する
 - 必要なら intermediate として `MusicXML` を明示する
 
 ### 2. 変換結果の診断
 
 - 利用者が warning や loss の理由を知りたい
-- Skill が `mikuscore` の診断方針に沿って説明する
-- 必要なら `mikuscore` が保持・非保持をどう扱うかを整理する
+- Skill が `miku-score` の診断方針に沿って説明する
+- 必要なら `miku-score` が保持・非保持をどう扱うかを整理する
 
 ### 3. AI handoff
 
@@ -98,13 +104,13 @@ MVP では `mikuscore` を採用する想定とする。
 
 ### 4. CLI / build / local workflow の参照
 
-- 利用者が `mikuscore` の CLI や build 手順を知りたい
+- 利用者が `miku-score` の CLI や build 手順を知りたい
 - Skill が `README` と `docs/spec/*` に沿って案内する
 - 未実装や experimental な範囲は明確に区別する
 
 ## 中核設計前提
 
-`mikuscore` skill は、`mikuscore` の次の前提を壊してはならない。
+`miku-score` skill は、`miku-score` の次の前提を壊してはならない。
 
 - `MusicXML-first` の変換パイプライン
 - current generative-AI full-score handoff は `ABC`
@@ -122,7 +128,7 @@ MVP では、Agent Skill の内部説明基軸は `MusicXML` を優先する。
 
 理由:
 
-- `mikuscore` 自体が canonical source として `MusicXML` を明示している
+- `miku-score` 自体が canonical source として `MusicXML` を明示している
 - README と仕様文書で `MusicXML` が基軸 format として扱われている
 - 他 format 間の変換でも、会話上の説明軸として `MusicXML` が最も整合的である
 
@@ -143,14 +149,14 @@ MVP では、Agent Skill の内部説明基軸は `MusicXML` を優先する。
 
 MVP では、次の文書群を主要な規範とする。
 
-- `vendor/mikuscore/README.md`
-- `vendor/mikuscore/docs/spec/SPEC.md`
-- `vendor/mikuscore/docs/spec/ARCHITECTURE.md`
-- `vendor/mikuscore/docs/spec/DIAGNOSTICS.md`
-- `vendor/mikuscore/docs/spec/ABC_IO.md`
-- `vendor/mikuscore/docs/spec/MIDI_IO.md`
-- `vendor/mikuscore/docs/spec/MUSESCORE_IO.md`
-- `vendor/mikuscore/docs/AI_INTERACTION_POLICY.md`
+- `vendor/miku-score/README.md`
+- `vendor/miku-score/docs/spec/SPEC.md`
+- `vendor/miku-score/docs/spec/ARCHITECTURE.md`
+- `vendor/miku-score/docs/spec/DIAGNOSTICS.md`
+- `vendor/miku-score/docs/spec/ABC_IO.md`
+- `vendor/miku-score/docs/spec/MIDI_IO.md`
+- `vendor/miku-score/docs/spec/MUSESCORE_IO.md`
+- `vendor/miku-score/docs/AI_INTERACTION_POLICY.md`
 
 優先順位:
 
@@ -189,7 +195,7 @@ MVP では、Skill の責務を次の操作単位として定義する。
 出力:
 
 - 問題の意味
-- `mikuscore` 上の扱い
+- `miku-score` 上の扱い
 - hard error か soft warning かの整理
 - 必要なら回避策
 
@@ -202,7 +208,7 @@ MVP では、Skill の責務を次の操作単位として定義する。
 
 出力:
 
-- `mikuscore` でその format をどう扱うべきか
+- `miku-score` でその format をどう扱うべきか
 - `MusicXML` を基軸にするべきか
 - AI-facing handoff では `ABC` を選ぶべきか
 - experimental 対応かどうか
@@ -236,7 +242,7 @@ MVP では、Skill の責務を次の操作単位として定義する。
 
 Skill は次のように振る舞う。
 
-- `mikuscore` が明示されたときに opt-in で発火する
+- `miku-score` が明示されたときに opt-in で発火する
 - 汎用的な音楽理論質問や一般的な譜面編集相談だけでは自動発火しない
 - format 名が複数ある場合は、まず source / target を整理する
 - format 変換では `MusicXML` を中核説明軸として扱う
@@ -250,9 +256,9 @@ Skill は次のように振る舞う。
 
 第一候補の発火条件:
 
-- 利用者が `mikuscore` と明示する
-- 利用者が `MusicXML-first` の `mikuscore` 変換フローを求める
-- 直前まで `mikuscore` 文脈が継続している
+- 利用者が `miku-score` と明示する
+- 利用者が `MusicXML-first` の `miku-score` 変換フローを求める
+- 直前まで `miku-score` 文脈が継続している
 
 自動発火を避ける条件:
 
@@ -261,14 +267,14 @@ Skill は次のように振る舞う。
 - 汎用的な XML 説明
 - `ABC` や `MIDI` という単語だけが出ている会話
 
-`mikuscore` skill は opt-in を基本とする。
+`miku-score` skill は opt-in を基本とする。
 
 ## hard error と soft warning
 
 Skill は次のものを hard error として扱う。
 
 - source format / target format が判定不能
-- `mikuscore` の現行スコープ外の変換を、あたかも実装済みであるかのように扱う要求
+- `miku-score` の現行スコープ外の変換を、あたかも実装済みであるかのように扱う要求
 - 仕様文書に反する断定
 
 Skill は次のものを soft warning として扱う。
@@ -290,7 +296,7 @@ MVP の現在設計は handoff 型を基本とする。
 
 一方で、将来は agent-to-agent 型もありうる。
 
-これは、上位エージェントが内部的に `mikuscore` CLI や変換 API を呼び、
+これは、上位エージェントが内部的に `miku-score` CLI や変換 API を呼び、
 中間の説明を画面に出しすぎずに処理する方式である。
 
 MVP ではまず、仕様に忠実な conversation contract を固めることを優先する。
@@ -302,7 +308,7 @@ MVP ではまず、仕様に忠実な conversation contract を固めること�
 
 理由:
 
-- `mikuscore` 自体は browser-based product であり、UI と Core の責務分離が強い
+- `miku-score` 自体は browser-based product であり、UI と Core の責務分離が強い
 - format conversion と diagnostic interpretation を skill に閉じ込めすぎると、実行環境差分を抱えやすい
 - CLI の段階的拡張が README / TODO に明示されている
 
@@ -310,12 +316,12 @@ MVP ではまず、仕様に忠実な conversation contract を固めること�
 
 役割は次のように分ける。
 
-- `mikuscore` skill
+- `miku-score` skill
   - format pair を整理する
   - `MusicXML-first` 方針を守る
   - diagnostics と制約を説明する
   - handoff / workflow guidance を返す
-- `mikuscore` CLI
+- `miku-score` CLI
   - `convert`
   - `render svg`
   - 今後の I/O 拡張
@@ -326,26 +332,26 @@ MVP ではまず、仕様に忠実な conversation contract を固めること�
 
 ## Skill 構成案
 
-`mikuproject-skills-devel` を参考に、`mikuscore-skills` でも次の構成を想定する。
+`mikuproject-skills-devel` を参考に、`miku-score-skills` でも次の構成を想定する。
 
 - `docs/agent-skill-design.md`
   - 設計メモ
-- `skills/mikuscore/SKILL.md`
+- `skills/igapyon-miku-score/SKILL.md`
   - 発火条件
   - core rules
   - operations
-- `skills/mikuscore/references/INDEX.md`
+- `skills/igapyon-miku-score/references/INDEX.md`
   - 詳細の入口
-- `skills/mikuscore/references/workflow/*`
+- `skills/igapyon-miku-score/references/workflow/*`
   - active workflow
   - conversion flow
   - diagnostics handling
-- `skills/mikuscore/references/io/*`
+- `skills/igapyon-miku-score/references/io/*`
   - `musicxml`
   - `abc`
   - `midi`
   - `musescore`
-- `skills/mikuscore/references/runtime/*`
+- `skills/igapyon-miku-score/references/runtime/*`
   - operations map
   - upstream map
 
@@ -353,7 +359,7 @@ MVP ではまず、仕様に忠実な conversation contract を固めること�
 
 次の点は、Skill 実装前に決めておくとよい。
 
-- `mikuscore` skill をどの程度 opt-in にするか
+- `miku-score` skill をどの程度 opt-in にするか
 - `convert` を中心 operation にするか
 - `render svg` を MVP に含めるか
 - `ABC` を AI handoff 上の特別扱いにするか
@@ -364,8 +370,8 @@ MVP ではまず、仕様に忠実な conversation contract を固めること�
 
 MVP では次を非目標とする。
 
-- `mikuscore` browser UI の完全代替
+- `miku-score` browser UI の完全代替
 - 高度な浄書機能の一般論
-- `mikuscore` 非依存の汎用楽譜変換論
+- `miku-score` 非依存の汎用楽譜変換論
 - 実装されていない format pair を実装済みのように見せること
 - 仕様文書にない自動補正をあるように説明すること

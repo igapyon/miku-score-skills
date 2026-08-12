@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>miku-score</title>
+  <link rel="stylesheet" href="lht-cmn/css/components.css" />
+  <link rel="stylesheet" href="src/css/app.css" />
+</head>
+<body class="md-page">
+  <svg aria-hidden="true" class="md-icon-sprite" width="0" height="0" viewBox="0 0 0 0" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <symbol id="md-icon-github" viewBox="0 0 16 16">
+        <path fill="currentColor" d="M8 0a8 8 0 0 0-2.53 15.6c.4.08.55-.17.55-.38v-1.33c-2.25.49-2.72-1.08-2.72-1.08-.36-.94-.9-1.2-.9-1.2-.74-.5.06-.49.06-.49.81.06 1.25.84 1.25.84.72 1.23 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.8-.21-3.69-.9-3.69-3.98 0-.88.32-1.6.83-2.16-.08-.2-.36-1.02.08-2.12 0 0 .68-.22 2.2.82A7.7 7.7 0 0 1 8 3.9c.68 0 1.37.1 2 .3 1.52-1.03 2.2-.82 2.2-.82.44 1.1.16 1.93.08 2.12.52.56.83 1.28.83 2.16 0 3.1-1.89 3.77-3.7 3.97.29.25.55.74.55 1.49v2.2c0 .21.14.46.55.38A8 8 0 0 0 8 0z"/>
+      </symbol>
+    </defs>
+  </svg>
+  <main class="md-shell">
+    <section class="md-card ms-app">
+      <header class="ms-hero">
+        <h1 class="md-headline ms-hero-title">
+          <span class="ms-hero-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M9 3v12.4a3.6 3.6 0 1 1-1.2-2.7V6.2l9-2.2v9.6a3.6 3.6 0 1 1-1.2-2.7V5.6L9 7.1Z" />
+            </svg>
+          </span>
+          <span>miku-score</span>
+          <lht-help-tooltip label="About miku-score" wide>
+            miku-score is a browser-based MusicXML-first score converter for moving score data between formats.
+            It uses MusicXML as the central interchange format and helps bridge notation tools, exchange files, and AI-oriented workflows.
+            It supports loading score data, previewing structure, checking diagnostics, and exporting to other formats in one screen.
+            MEI support is currently experimental.
+            miku-score intentionally keeps the feature set focused on conversion, inspection, and handoff rather than deep notation editing.
+            It is smartphone-centered, but it can also be used on PCs.
+            Workflow: 1) Choose input and load 2) Inspect the score and diagnostics 3) Verify by playback if needed 4) Export or hand off in another format.
+            Use tools like MuseScore for large-scale or complex notation editing, and use miku-score for conversion-oriented tasks.
+          </lht-help-tooltip>
+          <a
+            href="https://github.com/igapyon/miku-score"
+            class="ms-hero-link"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open miku-score GitHub repository"
+          >
+            <svg aria-hidden="true" viewBox="0 0 16 16" class="ms-btn-icon" fill="currentColor">
+              <use href="#md-icon-github" xlink:href="#md-icon-github"></use>
+            </svg>
+            <span>GitHub</span>
+          </a>
+        </h1>
+      </header>
+
+      <div class="ms-top-tabs" role="tablist" aria-label="miku-score sections">
+        <button type="button" class="ms-top-tab is-active" data-tab="input">
+          <span class="ms-top-tab-no">1</span>
+          <span class="ms-top-tab-label">Input</span>
+        </button>
+        <button type="button" class="ms-top-tab" data-tab="score">
+          <span class="ms-top-tab-no">2</span>
+          <span class="ms-top-tab-label">Score</span>
+        </button>
+        <button type="button" class="ms-top-tab" data-tab="edit">
+          <span class="ms-top-tab-no">3</span>
+          <span class="ms-top-tab-label">Edit</span>
+        </button>
+        <button type="button" class="ms-top-tab" data-tab="save">
+          <span class="ms-top-tab-no">4</span>
+          <span class="ms-top-tab-label">Output</span>
+        </button>
+      </div>
+
+      <div class="ms-flow">
+        <section class="md-section ms-flow-step ms-tab-panel" data-tab-panel="input">
+          <h2 class="md-section-title">
+            <span class="ms-step-no">1</span>Input
+            <lht-help-tooltip label="Input help">
+              <span class="ms-section-help-tooltip">
+                To use miku-score, first load your score here (from file/source) or create a new score.
+                Supported file types: MusicXML (`.musicxml`, `.xml`, `.mxl`), ABC (`.abc`), MIDI (`.mid`, `.midi`), VSQX (`.vsqx`), MEI (`.mei`), LilyPond (`.ly`), MuseScore (`.mscx`, `.mscz`).
+                You can move to Score/Edit/Output after completing this step.
+              </span>
+            </lht-help-tooltip>
+          </h2>
+
+          <div class="ms-radio-group-wrap">
+            <div class="ms-radio-group" role="radiogroup" aria-label="Input entry mode">
+              <label class="md-radio"><input id="inputEntryFile" type="radio" name="inputEntry" value="file" checked /> File input</label>
+              <label class="md-radio"><input id="inputEntrySource" type="radio" name="inputEntry" value="source" /> Source input</label>
+              <label class="md-radio"><input id="inputEntryNew" type="radio" name="inputEntry" value="new" /> New Score</label>
+            </div>
+          </div>
+
+          <div id="sourceTypeBlock" class="ms-radio-group-wrap md-hidden">
+            <div class="ms-radio-group" role="radiogroup" aria-label="Source input format">
+              <label class="md-radio"><input id="sourceTypeXml" type="radio" name="sourceType" value="xml" checked /> MusicXML</label>
+              <label class="md-radio"><input id="sourceTypeMuseScore" type="radio" name="sourceType" value="musescore" /> MuseScore</label>
+              <label class="md-radio"><input id="sourceTypeVsqx" type="radio" name="sourceType" value="vsqx" /> VSQX</label>
+              <label class="md-radio"><input id="sourceTypeAbc" type="radio" name="sourceType" value="abc" /> ABC</label>
+              <label class="md-radio"><input id="sourceTypeMei" type="radio" name="sourceType" value="mei" /> MEI</label>
+              <label class="md-radio"><input id="sourceTypeLilyPond" type="radio" name="sourceType" value="lilypond" /> LilyPond</label>
+            </div>
+          </div>
+
+          <div id="newInputBlock" class="ms-block md-hidden">
+            <div class="ms-stack-sm">
+              <lht-switch-help
+                class="ms-switch-field"
+                switch-id="newTemplatePianoGrandStaff"
+                label="Use Piano Grand Staff template (treble + bass, single part)">
+              </lht-switch-help>
+              <lht-text-field-help
+                field-id="newPartCount"
+                label="Track count (parts)"
+                type="number"
+                min="1"
+                max="16"
+                step="1"
+                value="1"
+                help-text="Choose how many parts to create for the new score. Use 1 for a simple single-part score."
+              ></lht-text-field-help>
+              <label class="ms-field">Time signature
+                <div class="ms-form-row">
+                  <lht-text-field-help
+                    field-id="newTimeBeats"
+                    label="Time beats"
+                    type="number"
+                    min="1"
+                    max="16"
+                    step="1"
+                    value="4"
+                    help-text="Set the numerator of the time signature. For example, use 4 for 4/4 or 3 for 3/4."
+                    style="max-width: 8rem;"
+                  ></lht-text-field-help>
+                  <span>/</span>
+                  <lht-select-help field-id="newTimeBeatType" field-class="md-select" label="Time beat type" style="max-width: 8rem;">
+                    <script type="application/json" slot="options">[
+                      {"value":"2","label":"2"},
+                      {"value":"4","label":"4","selected":true},
+                      {"value":"8","label":"8"},
+                      {"value":"16","label":"16"}
+                    ]</script>
+                  </lht-select-help>
+                </div>
+              </label>
+              <div class="ms-field">Key signature
+                <lht-select-help field-id="newKeyFifths" field-class="md-select" label="Key signature">
+                  <script type="application/json" slot="options">[
+                    {"value":"1","label":"♯1 (G)"},
+                    {"value":"2","label":"♯2 (D)"},
+                    {"value":"3","label":"♯3 (A)"},
+                    {"value":"4","label":"♯4 (E)"},
+                    {"value":"5","label":"♯5 (B)"},
+                    {"value":"6","label":"♯6 (F#)"},
+                    {"value":"7","label":"♯7 (C#)"},
+                    {"value":"0","label":"None (C)","selected":true},
+                    {"value":"-1","label":"♭1 (F)"},
+                    {"value":"-2","label":"♭2 (Bb)"},
+                    {"value":"-3","label":"♭3 (Eb)"},
+                    {"value":"-4","label":"♭4 (Ab)"},
+                    {"value":"-5","label":"♭5 (Db)"},
+                    {"value":"-6","label":"♭6 (Gb)"},
+                    {"value":"-7","label":"♭7 (Cb)"}
+                  ]</script>
+                </lht-select-help>
+              </div>
+            </div>
+            <div id="newPartClefList" class="ms-stack-sm" aria-live="polite"></div>
+          </div>
+
+          <div id="fileInputBlock" class="ms-block"></div>
+
+          <div id="sourceXmlInputBlock" class="ms-block md-hidden">
+            <label for="xmlInput" class="md-label">MusicXML</label>
+            <textarea id="xmlInput" rows="12" spellcheck="false" class="md-textarea"></textarea>
+          </div>
+
+          <div id="abcInputBlock" class="ms-block md-hidden">
+            <label for="abcInput" class="md-label">ABC</label>
+            <textarea id="abcInput" rows="12" spellcheck="false" class="md-textarea"></textarea>
+          </div>
+
+          <div id="museScoreInputBlock" class="ms-block md-hidden">
+            <label for="museScoreInput" class="md-label">MuseScore XML</label>
+            <textarea id="museScoreInput" rows="12" spellcheck="false" class="md-textarea"></textarea>
+          </div>
+
+          <div id="vsqxInputBlock" class="ms-block md-hidden">
+            <label for="vsqxInput" class="md-label">VSQX</label>
+            <textarea id="vsqxInput" rows="12" spellcheck="false" class="md-textarea"></textarea>
+          </div>
+
+          <div id="meiInputBlock" class="ms-block md-hidden">
+            <label for="meiInput" class="md-label">MEI</label>
+            <textarea id="meiInput" rows="12" spellcheck="false" class="md-textarea"></textarea>
+          </div>
+
+          <div id="lilyPondInputBlock" class="ms-block md-hidden">
+            <label for="lilyPondInput" class="md-label">LilyPond</label>
+            <textarea id="lilyPondInput" rows="12" spellcheck="false" class="md-textarea"></textarea>
+          </div>
+
+          <div class="ms-actions">
+            <lht-file-select
+              input-id="fileInput"
+              button-id="fileSelectBtn"
+              file-name-id="fileNameText"
+              button-label="Load from file"
+              placeholder="No file selected"
+              show-file-name
+              accept=".musicxml,.xml,.mxl,.abc,.mid,.midi,.vsqx,.mei,.ly,.mscx,.mscz,.zip,application/vnd.recordare.musicxml+xml,application/vnd.recordare.musicxml,application/vnd.recordare.musicxml-container,application/mxl+xml,audio/midi,audio/x-midi,audio/mid,text/vnd.abc,application/abc,text/x-abc,application/mei+xml,text/x-vsqx,application/vsqx,text/x-lilypond,text/x-ly,application/vnd.musescore.mscx,application/vnd.musescore.mscz,application/zip,application/x-zip-compressed,text/plain,text/xml,application/xml">
+            </lht-file-select>
+            <button id="loadBtn" type="button" class="md-button md-button--primary ms-icon-button md-hidden">
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7.5h6.2l2 2H21v7.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <path d="M12.2 13.4V9.8"></path>
+                <path d="M10 11.9l2.2 2.2 2.2-2.2"></path>
+              </svg>
+              <span>Load</span>
+            </button>
+            <button id="loadSample1Btn" type="button" class="md-button md-button--tonal ms-sample-button">Load sample 1</button>
+            <button id="loadSample2Btn" type="button" class="md-button md-button--tonal ms-sample-button">Load sample 2</button>
+            <button id="loadSample3Btn" type="button" class="md-button md-button--tonal ms-sample-button">Load sample 3</button>
+            <button id="loadSample4Btn" type="button" class="md-button md-button--tonal ms-sample-button">Load sample 4</button>
+            <button id="loadSampleBtn6" type="button" class="md-button md-button--tonal ms-sample-button">Load sample 6</button>
+            <button id="loadSample7Btn" type="button" class="md-button md-button--tonal ms-sample-button">Load sample 7</button>
+          </div>
+          <div id="zipEntrySelectBlock" class="ms-block md-hidden">
+            <lht-select-help field-id="zipEntrySelect" field-class="md-select" label="ZIP root entry"></lht-select-help>
+          </div>
+          <lht-error-alert id="inputUiMessage" class="ms-ui-message ms-ui-message--inline"></lht-error-alert>
+          <div id="localDraftNotice" class="ms-local-draft md-hidden" role="status" aria-live="polite">
+            <div id="localDraftText" class="ms-local-draft-text"></div>
+          </div>
+        </section>
+
+        <section class="md-section ms-flow-step ms-tab-panel" data-tab-panel="score" hidden>
+          <h2 class="md-section-title">
+            <span class="ms-step-no">2</span>Score
+            <lht-help-tooltip label="Score preview help">
+              <span class="ms-section-help-tooltip">
+                This screen is for checking the loaded score, trying quick playback, and selecting the measure to edit.
+                Select a note in the target measure here, then go to Edit to apply actual note changes in that selected measure.
+              </span>
+            </lht-help-tooltip>
+          </h2>
+          <div class="ms-actions ms-preview-actions">
+            <button id="playBtn" type="button" class="md-button md-button--tonal ms-icon-button">
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="currentColor">
+                <path d="M8 6.5v11l9-5.5z"></path>
+              </svg>
+              <span>Play</span>
+            </button>
+            <button id="stopBtn" type="button" class="md-button md-button--surface ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="currentColor">
+                <rect x="7" y="7" width="10" height="10" rx="1.5"></rect>
+              </svg>
+              <span>Stop</span>
+            </button>
+            <button id="scoreEditBtn" type="button" class="md-button md-button--surface ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 20h4l10-10a2 2 0 0 0-4-4L4 16z"></path>
+                <path d="m12 6 6 6"></path>
+              </svg>
+              <span>Edit</span>
+            </button>
+          </div>
+          <div id="debugScoreWrap" class="ms-debug-wrap">
+            <div id="debugScoreArea" class="ms-debug-score"></div>
+          </div>
+          <div class="ms-actions ms-preview-actions">
+            <button id="appendMeasureBtn" type="button" class="md-button md-button--tonal ms-icon-button">
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
+              </svg>
+              <span>Add Measure (End)</span>
+            </button>
+          </div>
+          <p id="scoreHeaderMetaText" class="ms-score-header-meta md-hidden" aria-live="polite"></p>
+          <p id="playbackText" class="ms-playback-status" aria-live="polite">Playback: idle</p>
+        </section>
+
+        <section class="md-section ms-flow-step ms-tab-panel" data-tab-panel="edit" hidden>
+          <h2 class="md-section-title">
+            <span class="ms-step-no">3</span>Edit
+            <lht-help-tooltip label="Edit help">
+              <span class="ms-section-help-tooltip">
+                In Edit, start by converting a rest to a note, then adjust notes in the selected measure:
+                split notes, change pitch, add accidentals, and change duration. You can also try quick playback.
+                Press Apply to reflect your edits back to Score, or Discard to cancel current measure edits.
+                Use the arrow buttons to move between measures.
+                Editing is intentionally limited to avoid breaking MusicXML structure, so use a dedicated notation app for fine-grained editing.
+              </span>
+            </lht-help-tooltip>
+            <span id="measurePartNameText" class="ms-edit-part-name md-hidden">Track: -</span>
+            <span class="ms-edit-nav" role="group" aria-label="Measure navigation">
+              <button id="measureNavLeftBtn" type="button" class="md-button md-button--surface ms-nav-arrow-btn" aria-label="Previous measure in this track">←</button>
+              <button id="measureNavDownBtn" type="button" class="md-button md-button--surface ms-nav-arrow-btn" aria-label="Same measure in next track">↓</button>
+              <button id="measureNavUpBtn" type="button" class="md-button md-button--surface ms-nav-arrow-btn" aria-label="Same measure in previous track">↑</button>
+              <button id="measureNavRightBtn" type="button" class="md-button md-button--surface ms-nav-arrow-btn" aria-label="Next measure in this track">→</button>
+            </span>
+          </h2>
+          <div id="measureEmptyState" class="ms-empty-state" role="status" aria-live="polite">
+            <div class="ms-empty-state-inner">
+              <div class="ms-empty-state-title">No measure selected</div>
+              <div class="ms-empty-state-body">Click a measure in the score to select it</div>
+              <div class="ms-empty-state-actions">
+                <button id="measureSelectGuideBtn" type="button" class="md-button md-button--surface">
+                  Go to Score
+                </button>
+              </div>
+            </div>
+          </div>
+          <div id="measureEditorWrap" class="ms-measure-editor md-hidden">
+            <div id="measureEditorArea" class="ms-debug-score"></div>
+          </div>
+          <lht-error-alert id="uiMessage" class="ms-ui-message ms-ui-message--inline"></lht-error-alert>
+          <div class="ms-actions">
+            <button id="measureApplyBtn" type="button" class="md-button md-button--primary ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 7L9 18l-5-5"></path>
+              </svg>
+              <span>Apply</span>
+            </button>
+            <button id="measureDiscardBtn" type="button" class="md-button md-button--surface ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6L6 18"></path>
+                <path d="M6 6l12 12"></path>
+              </svg>
+              <span>Discard</span>
+            </button>
+            <button id="playMeasureBtn" type="button" class="md-button md-button--tonal ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="currentColor">
+                <path d="M8 6.5v11l9-5.5z"></path>
+              </svg>
+              <span>Play</span>
+            </button>
+            <button id="downloadMeasureMusicXmlBtn" type="button" class="md-button md-button--tonal ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v12"></path>
+                <path d="M8 11l4 4 4-4"></path>
+                <path d="M4 19h16"></path>
+              </svg>
+              <span>MusicXML</span>
+            </button>
+            <button id="downloadMeasureMidiBtn" type="button" class="md-button md-button--tonal ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 9a6 6 0 0 1 12 0v3a6 6 0 0 1-12 0z"></path>
+                <path d="M8.5 10.2h7"></path>
+                <circle cx="9.2" cy="12.6" r="0.6" fill="currentColor" stroke="none"></circle>
+                <circle cx="11.1" cy="13.6" r="0.6" fill="currentColor" stroke="none"></circle>
+                <circle cx="12.9" cy="13.6" r="0.6" fill="currentColor" stroke="none"></circle>
+                <circle cx="14.8" cy="12.6" r="0.6" fill="currentColor" stroke="none"></circle>
+                <circle cx="12" cy="11.8" r="0.6" fill="currentColor" stroke="none"></circle>
+              </svg>
+              <span>MIDI</span>
+            </button>
+          </div>
+          <div id="editSubTabList" class="ms-edit-subtabs md-hidden" role="tablist" aria-label="Edit detail panel">
+            <button
+              id="editSubTabEditorBtn"
+              type="button"
+              class="ms-edit-subtab-btn is-active"
+              role="tab"
+              aria-controls="editSubTabEditorPanel"
+              aria-selected="true"
+            >
+              Editor
+            </button>
+            <button
+              id="editSubTabXmlBtn"
+              type="button"
+              class="ms-edit-subtab-btn"
+              role="tab"
+              aria-controls="editSubTabXmlPanel"
+              aria-selected="false"
+            >
+              Measure XML
+            </button>
+          </div>
+          <div id="editSubTabEditorPanel" class="ms-edit-subtab-panel md-hidden" role="tabpanel">
+            <div class="ms-actions">
+              <button id="convertRestBtn" type="button" class="md-button md-button--tonal ms-icon-button">
+                <svg aria-hidden="true" viewBox="0 0 34 24" class="ms-btn-icon ms-btn-icon--wide" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <!-- quarter rest (wide, readable silhouette) -->
+                  <path d="M6.5 3.6c4 1.7 5.4 4.2 2.9 7.3-1.2 1.4-1.2 2.7.6 4.1 1.5 1.2 3.6 2 5.2 3.5"></path>
+                  <path d="M9.2 7.6c2.2 1.2 3.4 2.8 2 4.6"></path>
+                  <path d="M11.8 15.3c1.6.8 2.8 1.5 4 2.6"></path>
+                  <!-- convert arrow -->
+                  <path d="M16.8 12h5.2"></path>
+                  <path d="M20.2 9.5l2.6 2.5-2.6 2.5"></path>
+                  <!-- quarter note -->
+                  <circle cx="27.3" cy="15.9" r="2.2" fill="currentColor" stroke="none"></circle>
+                  <path d="M29.3 15.9V7.1"></path>
+                </svg>
+                <span>Convert Rest to Note</span>
+              </button>
+              <button id="splitNoteBtn" type="button" class="md-button md-button--tonal ms-icon-button">
+                <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="7.5" cy="15.5" r="2.5" fill="currentColor" stroke="none"></circle>
+                  <path d="M10 15.5V8"></path>
+                  <path d="M12 6v12"></path>
+                  <circle cx="16.5" cy="15.5" r="2.5" fill="currentColor" stroke="none"></circle>
+                  <path d="M19 15.5V8"></path>
+                </svg>
+                <span>Split Note</span>
+              </button>
+              <button id="deleteBtn" type="button" class="md-button md-button--surface ms-icon-button">
+                <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 7h16"></path>
+                  <path d="M9 7V5h6v2"></path>
+                  <rect x="6.5" y="7" width="11" height="13" rx="1.5"></rect>
+                  <path d="M10 10v7"></path>
+                  <path d="M14 10v7"></path>
+                </svg>
+                <span>Delete Note</span>
+              </button>
+            </div>
+
+            <div class="ms-grid">
+              <label class="ms-field">
+                <span class="ms-field-label">Pitch step</span>
+                <div class="ms-step-row">
+                  <input id="pitchStep" type="hidden" value="" />
+                  <span id="pitchStepValue" class="ms-step-value" aria-live="polite">Rest</span>
+                  <button id="pitchStepDownBtn" type="button" class="md-button md-button--surface ms-step-btn" aria-label="Lower pitch step">↓</button>
+                  <button id="pitchStepUpBtn" type="button" class="md-button md-button--surface ms-step-btn" aria-label="Raise pitch step">↑</button>
+                </div>
+              </label>
+              <label class="ms-field">
+                <span class="ms-field-label">Accidental</span>
+                <div class="ms-alter-row" role="group" aria-label="Accidental">
+                  <input id="pitchAlter" type="hidden" value="none" />
+                  <button type="button" class="md-button md-button--surface ms-alter-btn" data-alter="none" aria-label="No accidental">None</button>
+                  <button type="button" class="md-button md-button--surface ms-alter-btn" data-alter="-2" aria-label="Double flat">♭♭</button>
+                  <button type="button" class="md-button md-button--surface ms-alter-btn" data-alter="-1" aria-label="Flat">♭</button>
+                  <button type="button" class="md-button md-button--surface ms-alter-btn" data-alter="0" aria-label="Natural">♮</button>
+                  <button type="button" class="md-button md-button--surface ms-alter-btn" data-alter="1" aria-label="Sharp">♯</button>
+                  <button type="button" class="md-button md-button--surface ms-alter-btn" data-alter="2" aria-label="Double sharp">♯♯</button>
+                </div>
+              </label>
+              <input id="pitchOctave" type="hidden" value="4" />
+              <div class="ms-field">
+                <span class="ms-field-label">Duration</span>
+                <lht-select-help field-id="durationPreset" field-class="md-select" label="Duration preset"></lht-select-help>
+              </div>
+            </div>
+          </div>
+          <div id="editSubTabXmlPanel" class="ms-edit-subtab-panel md-hidden" role="tabpanel">
+            <div id="measureXmlInspector" class="ms-measure-xml">
+              <p class="ms-measure-xml-title">Measure DOM</p>
+              <textarea
+                id="measureXmlMeasureViewer"
+                class="ms-measure-xml-viewer"
+                readonly
+                spellcheck="false"
+                aria-label="Current measure DOM only (read-only)"
+              ></textarea>
+              <p class="ms-measure-xml-title">Self-contained MusicXML DOM</p>
+              <textarea
+                id="measureXmlDocumentViewer"
+                class="ms-measure-xml-viewer"
+                readonly
+                spellcheck="false"
+                aria-label="Current self-contained MusicXML DOM (read-only)"
+              ></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section class="md-section ms-flow-step ms-tab-panel" data-tab-panel="save" hidden>
+          <h2 class="md-section-title">
+            <span class="ms-step-no">4</span>Output
+            <lht-help-tooltip label="Output help">
+              <span class="ms-section-help-tooltip">
+                Output is where you take your work out of miku-score.
+                The main flow is exporting your edited result as MusicXML.
+                In addition, miku-score also supports ABC/MEI/LilyPond/MuseScore export and lightweight MIDI output for quick checks.
+                MIDI export is handy for simple confirmation, while complex production/export work is best done in dedicated software.
+              </span>
+            </lht-help-tooltip>
+          </h2>
+          <div class="ms-actions">
+            <button id="downloadBtn" type="button" class="md-button md-button--primary ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v12"></path>
+                <path d="M8 11l4 4 4-4"></path>
+                <path d="M4 19h16"></path>
+              </svg>
+              <span>MusicXML</span>
+            </button>
+            <button id="downloadMidiBtn" type="button" class="md-button md-button--tonal ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 9a6 6 0 0 1 12 0v3a6 6 0 0 1-12 0z"></path>
+                <path d="M8.5 10.2h7"></path>
+                <circle cx="9.2" cy="12.6" r="0.6" fill="currentColor" stroke="none"></circle>
+                <circle cx="11.1" cy="13.6" r="0.6" fill="currentColor" stroke="none"></circle>
+                <circle cx="12.9" cy="13.6" r="0.6" fill="currentColor" stroke="none"></circle>
+                <circle cx="14.8" cy="12.6" r="0.6" fill="currentColor" stroke="none"></circle>
+                <circle cx="12" cy="11.8" r="0.6" fill="currentColor" stroke="none"></circle>
+              </svg>
+              <span>MIDI</span>
+            </button>
+            <button id="downloadAbcBtn" type="button" class="md-button md-button--tonal ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect>
+                <path d="M8 9l-1.4 5"></path>
+                <path d="M6.7 11.8h2.6"></path>
+                <path d="M12.2 9h2.3a1.7 1.7 0 0 1 0 3.4h-2.3z"></path>
+                <path d="M12.2 12.4h2.5a1.7 1.7 0 0 1 0 3.4h-2.5z"></path>
+                <path d="M18.2 10.2a2.3 2.3 0 1 0 0 4.6"></path>
+              </svg>
+              <span>ABC</span>
+            </button>
+            <button id="downloadVsqxBtn" type="button" class="md-button md-button--tonal ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4.5" y="4.5" width="15" height="15" rx="2.5"></rect>
+                <path d="M8 8l8 8"></path>
+                <path d="M16 8l-8 8"></path>
+              </svg>
+              <span>VSQX</span>
+            </button>
+            <button id="downloadMuseScoreBtn" type="button" class="md-button md-button--tonal ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4.5" y="4.5" width="15" height="15" rx="2.5"></rect>
+                <path d="M8 8h8"></path>
+                <path d="M8 12h8"></path>
+                <path d="M8 16h5"></path>
+              </svg>
+              <span>MuseScore</span>
+            </button>
+            <button id="downloadMeiBtn" type="button" class="md-button md-button--tonal ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4.5" y="4.5" width="15" height="15" rx="2.5"></rect>
+                <path d="M8 15V9l2.5 3 2.5-3v6"></path>
+                <path d="M15.5 9v6"></path>
+              </svg>
+              <span>MEI</span>
+            </button>
+            <button id="downloadLilyPondBtn" type="button" class="md-button md-button--tonal ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4.5" y="4.5" width="15" height="15" rx="2.5"></rect>
+                <path d="M8.5 9.5v5"></path>
+                <path d="M8.5 14.5h6"></path>
+                <path d="M14.5 9.5v5"></path>
+              </svg>
+              <span>LilyPond</span>
+            </button>
+            <button id="downloadAllBtn" type="button" class="md-button md-button--tonal ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect>
+                <path d="M7 9h10"></path>
+                <path d="M7 12h10"></path>
+                <path d="M7 15h6"></path>
+              </svg>
+              <span>All</span>
+            </button>
+          </div>
+          <div class="ms-export-divider" role="separator" aria-hidden="true"></div>
+          <div class="ms-actions ms-preview-actions">
+            <button id="exportPlayBtn" type="button" class="md-button md-button--tonal ms-icon-button">
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="currentColor">
+                <path d="M8 6.5v11l9-5.5z"></path>
+              </svg>
+              <span>Play</span>
+            </button>
+            <button id="exportStopBtn" type="button" class="md-button md-button--surface ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="currentColor">
+                <rect x="7" y="7" width="10" height="10" rx="1.5"></rect>
+              </svg>
+              <span>Stop</span>
+            </button>
+            <button id="downloadSvgBtn" type="button" class="md-button md-button--surface ms-icon-button" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v10"></path>
+                <path d="M8.5 9.5 12 13l3.5-3.5"></path>
+                <rect x="4" y="15" width="16" height="6" rx="2"></rect>
+              </svg>
+              <span>SVG</span>
+            </button>
+            <button id="discardDraftExportBtn" type="button" class="md-button md-button--surface ms-icon-button md-hidden">
+              <svg aria-hidden="true" viewBox="0 0 24 24" class="ms-btn-icon" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 7h16"></path>
+                <path d="M9 7V5h6v2"></path>
+                <rect x="6.5" y="7" width="11" height="13" rx="1.5"></rect>
+                <path d="M10 10v7"></path>
+                <path d="M14 10v7"></path>
+              </svg>
+              <span>Discard Draft</span>
+            </button>
+            <button id="resetPlaybackSettingsBtn" type="button" class="md-button md-button--surface ms-icon-button">
+              <span>Reset to defaults</span>
+            </button>
+          </div>
+          <section class="ms-settings-card" aria-label="General settings">
+            <details id="generalSettingsAccordion" class="ms-settings-accordion">
+              <summary class="ms-settings-summary">General Settings</summary>
+              <div class="ms-settings-body">
+                <div class="ms-settings-block">
+                  <div class="ms-field ms-field--switch">
+                    <span class="ms-field-label">
+                      <span>Keep roundtrip metadata (`mks:meta:*`)</span>
+                      <lht-help-tooltip label="MusicXML roundtrip metadata help">
+                        <span class="ms-section-help-tooltip">
+                          Controls `mks:meta:*` fields in MusicXML output/export.
+                          Turn this OFF if you want to omit roundtrip restoration metadata.
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-switch-help class="ms-switch-field ms-switch-field--control" switch-id="keepMksMetaMetadataInMusicXml" checked>
+                    </lht-switch-help>
+                  </div>
+                  <div class="ms-field ms-field--switch">
+                    <span class="ms-field-label">
+                      <span>Keep source metadata (`mks:src:*`)</span>
+                      <lht-help-tooltip label="MusicXML source metadata help">
+                        <span class="ms-section-help-tooltip">
+                          Controls `mks:src:*` fields in MusicXML output/export.
+                          Also affects generation of source metadata during import.
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-switch-help class="ms-switch-field ms-switch-field--control" switch-id="keepMksSrcMetadataInMusicXml" checked>
+                    </lht-switch-help>
+                  </div>
+                  <div class="ms-field ms-field--switch">
+                    <span class="ms-field-label">
+                      <span>Keep debug metadata (`mks:dbg:*`)</span>
+                      <lht-help-tooltip label="MusicXML debug metadata help">
+                        <span class="ms-section-help-tooltip">
+                          Controls `mks:dbg:*` fields in MusicXML output/export.
+                          Also affects generation of debug metadata during import.
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-switch-help class="ms-switch-field ms-switch-field--control" switch-id="keepMksDbgMetadataInMusicXml" checked>
+                    </lht-switch-help>
+                  </div>
+                  <div class="ms-field ms-field--switch">
+                    <span class="ms-field-label">
+                      <span>Export MusicXML text as `.xml` extension</span>
+                      <lht-help-tooltip label="MusicXML extension export help">
+                        <span class="ms-section-help-tooltip">
+                          Default is OFF (`.musicxml`). When enabled, plain MusicXML export uses `.xml`.
+                          While this is ON, `Compress MusicXML / MuseScore export` is forced OFF.
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-switch-help class="ms-switch-field ms-switch-field--control" switch-id="exportMusicXmlAsXmlExtension">
+                    </lht-switch-help>
+                  </div>
+                  <div class="ms-field ms-field--switch">
+                    <span class="ms-field-label">
+                      <span>Compress MusicXML / MuseScore export</span>
+                      <lht-help-tooltip label="Compression export help">
+                        <span class="ms-section-help-tooltip">
+                          When enabled, MusicXML export uses `.mxl` and MuseScore export uses `.mscz` (ZIP container).
+                          When disabled, plain `.musicxml` / `.mscx` text files are exported.
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-switch-help class="ms-switch-field ms-switch-field--control" switch-id="compressXmlMuseScoreExport" checked>
+                    </lht-switch-help>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </section>
+          <section class="ms-settings-card" aria-label="MIDI and playback settings">
+            <details id="settingsAccordion" class="ms-settings-accordion">
+              <summary class="ms-settings-summary">MIDI &amp; Playback Settings</summary>
+              <div class="ms-settings-body">
+                <div class="ms-settings-block">
+                  <h4 class="ms-settings-subtitle">MIDI &amp; Playback Shared Settings</h4>
+                  <div class="ms-field">
+                    <span class="ms-field-label">
+                      <span>Grace Timing Mode</span>
+                      <lht-help-tooltip label="Grace timing mode help">
+                        <span class="ms-section-help-tooltip">
+                          Applies to MIDI-like playback and MIDI export.
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-select-help field-id="graceTimingMode" field-class="md-select" label="Grace Timing Mode">
+                      <script type="application/json" slot="options">[
+                        {"value":"before_beat","label":"Before beat (appoggiatura-like)","selected":true},
+                        {"value":"on_beat","label":"On beat (principal delayed)"},
+                        {"value":"classical_equal","label":"Classical equal split"}
+                      ]</script>
+                    </lht-select-help>
+                  </div>
+                  <div class="ms-field ms-field--switch">
+                    <span class="ms-field-label">
+                      <span>Use metric beat accents</span>
+                      <lht-help-tooltip label="Metric beat accents help">
+                        <span class="ms-section-help-tooltip">
+                          Adds subtle beat emphasis in MIDI-like playback and MIDI export.
+                          4/4: strong-weak-medium-weak, 6/8: strong-weak-weak-medium-weak-weak,
+                          3-beat: strong-weak-weak, 5-beat: strong-weak-medium-weak-weak,
+                          others: strong-weak-weak-...
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-switch-help class="ms-switch-field ms-switch-field--control" switch-id="metricAccentEnabled" checked>
+                    </lht-switch-help>
+                  </div>
+                  <div class="ms-field">
+                    <span class="ms-field-label">
+                      <span>Accent amount</span>
+                      <lht-help-tooltip label="Accent amount help">
+                        <span class="ms-section-help-tooltip">
+                          Controls the velocity gap of metric accents when enabled.
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-select-help field-id="metricAccentProfile" field-class="md-select" label="Accent amount">
+                      <script type="application/json" slot="options">[
+                        {"value":"subtle","label":"Subtle","selected":true},
+                        {"value":"balanced","label":"Balanced"},
+                        {"value":"strong","label":"Strong"}
+                      ]</script>
+                    </lht-select-help>
+                  </div>
+                </div>
+                <div class="ms-settings-block">
+                  <h4 class="ms-settings-subtitle">MIDI Settings</h4>
+                  <div class="ms-field">
+                    <span class="ms-field-label">
+                      <span>MIDI Export Instrument</span>
+                      <lht-help-tooltip label="MIDI export instrument help">
+                        <span class="ms-section-help-tooltip">
+                          Used when MusicXML does not specify an instrument for the part.
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-select-help field-id="midiProgramSelect" field-class="md-select" label="MIDI Export Instrument">
+                      <script type="application/json" slot="options">[
+                        {"value":"acoustic_grand_piano","label":"Acoustic Grand Piano"},
+                        {"value":"acoustic_guitar_nylon","label":"Acoustic Guitar (nylon)"},
+                        {"value":"acoustic_bass","label":"Acoustic Bass"},
+                        {"value":"clavinet","label":"Clavinet"},
+                        {"value":"drawbar_organ","label":"Drawbar Organ"},
+                        {"value":"electric_piano_1","label":"Electric Piano 1"},
+                        {"value":"electric_piano_2","label":"Electric Piano 2","selected":true},
+                        {"value":"harpsichord","label":"Harpsichord"},
+                        {"value":"honky_tonk_piano","label":"Honky-tonk Piano"},
+                        {"value":"string_ensemble_1","label":"String Ensemble 1"},
+                        {"value":"synth_brass_1","label":"Synth Brass 1"},
+                        {"value":"violin","label":"Violin"}
+                      ]</script>
+                    </lht-select-help>
+                  </div>
+                  <div class="ms-field">
+                    <span class="ms-field-label">
+                      <span>MIDI Export Profile</span>
+                      <lht-help-tooltip label="MIDI export profile help">
+                        <span class="ms-section-help-tooltip">
+                          Safe keeps current semantic-preserving behavior.
+                          MuseScore parity uses higher PPQ and parity-focused normalization to better match MuseScore-style MIDI.
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-select-help field-id="midiExportProfile" field-class="md-select" label="MIDI Export Profile">
+                      <script type="application/json" slot="options">[
+                        {"value":"safe","label":"safe (semantic-first)","selected":true},
+                        {"value":"musescore_parity","label":"musescore_parity (closer rendering)"}
+                      ]</script>
+                    </lht-select-help>
+                  </div>
+                  <div class="ms-field">
+                    <span class="ms-field-label">
+                      <span>MIDI Import Quantize Grid</span>
+                      <lht-help-tooltip label="MIDI import quantize grid help">
+                        <span class="ms-section-help-tooltip">
+                          Controls timing quantization used when importing MIDI to MusicXML.
+                          Finer grids keep short ornamental notes more visible.
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-select-help field-id="midiImportQuantizeGrid" field-class="md-select" label="MIDI Import Quantize Grid">
+                      <script type="application/json" slot="options">[
+                        {"value":"1/8","label":"1/8"},
+                        {"value":"1/16","label":"1/16"},
+                        {"value":"1/32","label":"1/32","selected":true},
+                        {"value":"1/64","label":"1/64"}
+                      ]</script>
+                    </lht-select-help>
+                  </div>
+                  <div class="ms-field ms-field--switch">
+                    <span class="ms-field-label">
+                      <span>Triplet-aware MIDI import</span>
+                      <lht-help-tooltip label="Triplet-aware MIDI import help">
+                        <span class="ms-section-help-tooltip">
+                          Detects triplet-like timing and adjusts quantization to preserve tuplet feel.
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-switch-help class="ms-switch-field ms-switch-field--control" switch-id="midiImportTripletAware" checked>
+                    </lht-switch-help>
+                  </div>
+                  <div class="ms-field ms-field--switch">
+                    <span class="ms-field-label">
+                      <span>Always override instrument</span>
+                      <lht-help-tooltip label="Always override instrument help">
+                        <span class="ms-section-help-tooltip">
+                          Always override MusicXML instrument with selected export instrument.
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-switch-help class="ms-switch-field ms-switch-field--control" switch-id="forceMidiProgramOverride">
+                    </lht-switch-help>
+                  </div>
+                </div>
+                <div class="ms-settings-block">
+                  <h4 class="ms-settings-subtitle">Playback Settings</h4>
+                  <div class="ms-field ms-field--switch">
+                    <span class="ms-field-label">
+                      <span>Use MIDI-like playback</span>
+                      <lht-help-tooltip label="MIDI-like playback help">
+                        <span class="ms-section-help-tooltip">
+                          Uses MIDI-style timing and expression (articulation, grace placement, and related nuance) in quick playback.
+                        </span>
+                      </lht-help-tooltip>
+                    </span>
+                    <lht-switch-help class="ms-switch-field ms-switch-field--control" switch-id="playbackUseMidiLike" checked>
+                    </lht-switch-help>
+                  </div>
+                  <div class="ms-field">
+                    <span class="ms-field-label">Quick Playback Tone</span>
+                    <lht-select-help field-id="playbackWaveform" field-class="md-select" label="Quick Playback Tone">
+                      <script type="application/json" slot="options">[
+                        {"value":"sine","label":"Sine"},
+                        {"value":"triangle","label":"Triangle","selected":true},
+                        {"value":"square","label":"Square"}
+                      ]</script>
+                    </lht-select-help>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </section>
+        </section>
+      </div>
+
+    </section>
+  </main>
+  <lht-loading-overlay id="fileLoadOverlay" text="Loading file..." aria-hidden="true"></lht-loading-overlay>
+  <lht-toast id="toast"></lht-toast>
+
+  <script src="src/js/verovio.js"></script>
+  <script src="src/js/midi-writer.js"></script>
+  <script src="src/vendor/utaformatix3/utaformatix3-ts-plus.mikuscore.iife.js"></script>
+  <script src="lht-cmn/js/components.js"></script>
+  <script src="src/js/main.js"></script>
+</body>
+</html>
