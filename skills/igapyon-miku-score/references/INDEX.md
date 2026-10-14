@@ -2,7 +2,8 @@
 
 Use this index only when the core contract in `SKILL.md` is not enough.
 The goal of these references is operational consistency, not broad background reading.
-For the generated inventory of the whole skill package, read [../index.json](../index.json) first.
+Follow the direct links below for the current task. Search the relevant
+subdirectory when a file is not listed here.
 
 ## Workflow
 

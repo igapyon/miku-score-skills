@@ -11,7 +11,6 @@ const repoRoot = path.resolve(__dirname, "..");
 const requiredPaths = [
   "skills/igapyon-miku-score/SKILL.md",
   "skills/igapyon-miku-score/agents/openai.yaml",
-  "skills/igapyon-miku-score/index.json",
   "skills/igapyon-miku-score/references/INDEX.md",
   "docs/agent-skill-design.md",
   "docs/development.md",
