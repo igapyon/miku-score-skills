@@ -73,7 +73,7 @@ For explicit `miku-score` convert/render requests, first attempt the vendored CL
 
 Use this order:
 
-1. read this `SKILL.md` and, when a file inventory is useful, `index.json`
+1. read this `SKILL.md` and follow its direct links to the needed references
 2. check the vendored `miku-score` runtime first
 3. use the vendored CLI or documented runtime flow immediately if present
 4. only if that path is missing or unusable, search for alternatives
@@ -153,4 +153,3 @@ On soft warnings, continue and report them concisely.
 Read these only when needed:
 
 - [references/INDEX.md](references/INDEX.md) for workflow, runtime, output, and example references
-- [index.json](index.json) for the generated file inventory of this skill package

@@ -145,7 +145,6 @@ function verifyBundleContents() {
   }
   const requiredPaths = [
     "SKILL.md",
-    "index.json",
     "references/INDEX.md",
     "vendor/miku-score/scripts/miku-score-cli.mjs",
     "vendor/miku-score/LICENSE",
